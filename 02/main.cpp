@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <string>
 #include <stdio.h>
 
@@ -43,7 +44,14 @@ bool init()
     }
     else
     {
-      gScreenSurface = SDL_GetWindowSurface(gWindow);
+      // initialize png
+      int imgFlags = IMG_INIT_PNG;
+      if (!(IMG_Init(imgFlags) & imgFlags)) {
+        printf("SDL_Image could not be initialized");
+        success = false;
+      } else {
+        gScreenSurface = SDL_GetWindowSurface(gWindow);
+      }
     }
   }
 
@@ -54,7 +62,7 @@ bool loadMedia()
 {
   bool success = true;
 
-  gStretchedSurface = loadSurface("./stretch.bmp");
+  gStretchedSurface = loadSurface("./loaded.png");
   if (gStretchedSurface == NULL) {
     printf("failed to load stretch image");
     success = false;
@@ -77,7 +85,7 @@ void close()
 SDL_Surface* loadSurface(std::string path) {
   SDL_Surface* optimizedSurface = NULL;
 
-  SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
+  SDL_Surface* loadedSurface = IMG_Load(path.c_str());
   if (loadedSurface == NULL) {
     printf( "Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
   } else {

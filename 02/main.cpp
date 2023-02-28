@@ -24,8 +24,6 @@ SDL_Window* gWindow = NULL;
 //The surface contained by the window
 SDL_Renderer* gRenderer = NULL;
 
-SDL_Texture* gTexture = NULL;
-
 bool init()
 {
   bool success = true;
@@ -71,9 +69,6 @@ bool init()
 
 void close()
 {
-  SDL_DestroyTexture(gTexture);
-  gTexture = NULL;
-
   SDL_DestroyRenderer(gRenderer);
   SDL_DestroyWindow(gWindow);
   gWindow = NULL;
@@ -105,12 +100,6 @@ SDL_Texture* loadTexture(std::string path) {
 bool loadMedia() {
   bool success = true;
 
-  gTexture = loadTexture("./texture.png");
-  if (gTexture == NULL) {
-    printf("Failed to load texture\n");
-    success = false;
-  }
-
   return success;
 }
 
@@ -139,11 +128,32 @@ int main(int argc, char* argv[])
           }
         }
 
-        SDL_RenderClear(gRenderer);
+        SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+        SDL_RenderClear( gRenderer );
 
-        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+        //Render red filled quad
+        SDL_Rect fillRect = { SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+        SDL_SetRenderDrawColor( gRenderer, 0xFF, 0x00, 0x00, 0xFF );    
+        SDL_RenderFillRect( gRenderer, &fillRect );
 
-        SDL_RenderPresent(gRenderer);
+        //Render green outlined quad
+        SDL_Rect outlineRect = { SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6, SCREEN_WIDTH * 2 / 3, SCREEN_HEIGHT * 2 / 3 };
+        SDL_SetRenderDrawColor( gRenderer, 0x00, 0xFF, 0x00, 0xFF );    
+        SDL_RenderDrawRect( gRenderer, &outlineRect );
+        
+        //Draw blue horizontal line
+        SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0xFF, 0xFF );    
+        SDL_RenderDrawLine( gRenderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2 );
+
+        //Draw vertical line of yellow dots
+        SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0x00, 0xFF );
+        for( int i = 0; i < SCREEN_HEIGHT; i += 4 )
+        {
+          SDL_RenderDrawPoint( gRenderer, SCREEN_WIDTH / 2, i );
+        }
+
+        //Update screen
+        SDL_RenderPresent( gRenderer );
       }
     }
   }

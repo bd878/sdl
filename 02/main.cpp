@@ -23,6 +23,10 @@ public:
 
   void setColor(Uint8 red, Uint8 green, Uint8 blue);
 
+  void setBlendMode(SDL_BlendMode blending);
+
+  void setAlpha(Uint8 alpha);
+
   // render texture at given point
   void render(int x, int y, SDL_Rect* clip = NULL);
 
@@ -54,6 +58,7 @@ SDL_Renderer* gRenderer = NULL;
 SDL_Rect gSpriteClips[4];
 
 LTexture gModulatedTexture;
+LTexture gBackgroundTexture;
 
 LTexture::LTexture() {
   mTexture = NULL;
@@ -122,6 +127,14 @@ int LTexture::getHeight() {
   return mHeight;
 }
 
+void LTexture::setBlendMode(SDL_BlendMode blending) {
+  SDL_SetTextureBlendMode(mTexture, blending);
+}
+
+void LTexture::setAlpha(Uint8 alpha) {
+  SDL_SetTextureAlphaMod(mTexture, alpha);
+}
+
 bool init()
 {
   bool success = true;
@@ -182,9 +195,17 @@ bool loadMedia() {
   bool success = true;
 
   //Load texture
-  if( !gModulatedTexture.loadFromFile( "colors.png" ) )
+  if( !gModulatedTexture.loadFromFile( "fadeout.png" ) )
   {
     printf( "Failed to load colors texture!\n" );
+    success = false;
+  } else {
+    // standard alpha blending
+    gModulatedTexture.setBlendMode(SDL_BLENDMODE_BLEND);
+  }
+
+  if (!gBackgroundTexture.loadFromFile("fadein.png")) {
+    printf("failed to load background texture\n");
     success = false;
   }
 
@@ -209,39 +230,25 @@ int main(int argc, char* argv[])
 
       SDL_Event e;
 
-      Uint8 r = 255;
-      Uint8 g = 255;
-      Uint8 b = 255;
+      Uint8 a = 255;
 
       while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
           if (e.type == SDL_QUIT) {
             quit = true;
           } else if (e.type == SDL_KEYDOWN) {
-            switch (e.key.keysym.sym) {
-              case SDLK_q:
-                r += 32;
-                break;
-
-              case SDLK_w:
-                g += 32;
-                break;
-
-              case SDLK_e:
-                b += 32;
-                break;
-
-              case SDLK_a:
-                r -= 32;
-                break;
-
-              case SDLK_s:
-                g -= 32;
-                break;
-
-              case SDLK_d:
-                b -= 32;
-                break;
+            if (e.key.keysym.sym == SDLK_w) {
+              if (a + 32 > 255) {
+                a = 255;
+              } else {
+                a += 32;
+              }
+            } else if (e.key.keysym.sym == SDLK_s) {
+              if (a - 32 < 0) {
+                a = 0;
+              } else {
+                a -= 32;
+              }
             }
           }
         }
@@ -249,7 +256,9 @@ int main(int argc, char* argv[])
         SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
         SDL_RenderClear( gRenderer );
 
-        gModulatedTexture.setColor(r, g, b);
+        gBackgroundTexture.render(0, 0);
+
+        gModulatedTexture.setAlpha(a);
         gModulatedTexture.render(0, 0);
 
         //Update screen
